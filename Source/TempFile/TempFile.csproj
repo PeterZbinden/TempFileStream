@@ -7,7 +7,7 @@
 		<Authors>Peter Zbinden</Authors>
 		<PackageProjectUrl>https://github.com/PeterZbinden/TempFileStream</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<Version>1.0.1</Version>
+		<Version>1.0.2</Version>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	</PropertyGroup>
 
