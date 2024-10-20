@@ -1,7 +1,11 @@
 [NuGet.org](https://www.nuget.org/packages/TempFile)
 
 # TempFile
-A Library that helps the User to deal with ephemeral Streams that need to be persisted to local disk and cleaned up later.
+A Library that helps the User to deal with short-lived Streams that are too large to just keep in memory.
+An Example of such a usecase could be:
+Your logic needs to download a file, perform some operations on it and upload it somewhere else.
+
+'TempFile' helps by providing a Stream to a Temp-File that you wan write to/read from and gets deleted as soon as it is disposed.
 
 ### Add Namespace
 ```csharp
@@ -9,21 +13,24 @@ using TempFile;
 ```
 
 ### Basic Usage
+Writing to a 'TempFileStream' is very similar to a normal Stream.
+To delete of the File, either use a using-block or manually dispose the Stream.
 ```csharp
 await using (var tempFile = new TempFileStream())
 {
     await tempFile.WriteAsync(Encoding.UTF8.GetBytes("Test"));
-	
-	// Flush forces write to disk
-	await tempFile.FlushAsync();
-	
-	// At this point, the Temp-File still exists
+    
+    // Flush forces write to disk
+    await tempFile.FlushAsync();
+    
+    // At this point, the Temp-File still exists
 }
 // As soon as we leave the using-block, the Temp-File is deleted
 ```
 
 ### Using StreamWriter and StreamReader
-
+When working with the 'TempFile' you normally also want to read from it.
+'TempFileStream' acts like any normal Stream, where you can reset the Position.
 ```csharp
 var path = string.Empty;
 
