@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 
 namespace TempFile;
@@ -12,24 +13,25 @@ public class TempFileStream : Stream
 {
     private readonly ILogger _logger;
 
-    private readonly string _tempFilePath;
+    private readonly string _filePath;
     private readonly Stream _fileStream;
+    public string FilePath => _filePath;
 
     /// <summary>
     /// Using rootTemp Path provided by the configuration
     /// </summary>
-    /// <param name="logger"></param>
     /// <param name="configuration"></param>
+    /// <param name="logger"></param>
     /// <param name="fileMode"></param>
     /// <param name="fileAccess"></param>
     /// <param name="fileShare"></param>
     public TempFileStream(
-        ILogger logger, 
-        TempFileStreamConfiguration configuration, 
+        TempFileStreamConfiguration configuration,
+        ILogger? logger = null,
         FileMode fileMode = FileMode.Create,
         FileAccess fileAccess = FileAccess.ReadWrite,
         FileShare fileShare = FileShare.ReadWrite)
-    : this(logger, configuration.RootTempFolder, fileMode, fileAccess, fileShare)
+    : this(configuration.RootTempFolder, logger, fileMode, fileAccess, fileShare)
     {
     }
 
@@ -45,26 +47,26 @@ public class TempFileStream : Stream
         FileMode fileMode = FileMode.Create,
         FileAccess fileAccess = FileAccess.ReadWrite,
         FileShare fileShare = FileShare.ReadWrite)
-        : this(logger, Path.Combine(Path.GetTempPath(), "Temp-FileStreams"), fileMode, fileAccess, fileShare)
+        : this(Path.Combine(Path.GetTempPath(), "Temp-FileStreams"), logger, fileMode, fileAccess, fileShare)
     {
     }
 
     /// <summary>
     /// Using the explicit temp folder path
     /// </summary>
-    /// <param name="logger"></param>
     /// <param name="tempFolderPath"></param>
+    /// <param name="logger"></param>
     /// <param name="fileMode"></param>
     /// <param name="fileAccess"></param>
     /// <param name="fileShare"></param>
     public TempFileStream(
-        ILogger logger, 
-        string tempFolderPath, 
+        string tempFolderPath,
+        ILogger? logger = null,
         FileMode fileMode = FileMode.Create,
         FileAccess fileAccess = FileAccess.ReadWrite,
         FileShare fileShare = FileShare.ReadWrite)
     {
-        _logger = logger;
+        _logger = logger ?? NullLogger.Instance;
 
         // Ensure the folder exists
         var dirInfo = new DirectoryInfo(tempFolderPath);
@@ -77,11 +79,11 @@ public class TempFileStream : Stream
         FileInfo fileInfo;
         do
         {
-            _tempFilePath = Path.Combine(tempFolderPath, Guid.NewGuid().ToString());
-            fileInfo = new FileInfo(_tempFilePath);
+            _filePath = Path.Combine(tempFolderPath, Guid.NewGuid().ToString());
+            fileInfo = new FileInfo(_filePath);
         } while (fileInfo.Exists);
 
-        _fileStream = new FileStream(_tempFilePath, fileMode, fileAccess, fileShare);
+        _fileStream = new FileStream(_filePath, fileMode, fileAccess, fileShare);
     }
 
     /// <summary>
@@ -140,7 +142,7 @@ public class TempFileStream : Stream
         try
         {
             _fileStream.Close();
-            File.Delete(_tempFilePath);
+            File.Delete(_filePath);
         }
         catch (Exception e)
         {
@@ -149,7 +151,7 @@ public class TempFileStream : Stream
                 throw;
             }
 
-            _logger.LogError(e, $"Temporary File '{_tempFilePath}' could not be removed on {nameof(Dispose)}.");
+            _logger.LogError(e, $"Temporary File '{_filePath}' could not be removed on {nameof(Dispose)}.");
         }
     }
 }
